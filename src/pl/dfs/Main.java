@@ -73,6 +73,7 @@ public class Main {
                             String response = "success";
                             bufferedOutputStream.write(response.getBytes());
                             bufferedOutputStream.flush();
+
                         } else if(command.equals("delete")) {
                             i = 0;
                             while (input.charAt(i) != '"') i++;
@@ -82,6 +83,7 @@ public class Main {
                             String response = "success";
                             bufferedOutputStream.write(response.getBytes());
                             bufferedOutputStream.flush();
+
                         } else if(command.equals("download")) {
                             i = 0;
                             while (input.charAt(i) != '"') i++;
