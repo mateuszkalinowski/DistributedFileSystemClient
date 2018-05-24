@@ -30,15 +30,13 @@ public class Main {
             BufferedInputStream bufferedInputStream = new BufferedInputStream(socket.getInputStream());
 
             String rootPath = System.getProperty("user.home");
-            File dir = new File(rootPath + File.separator + "dfsNodeFiles" + String.valueOf(socketNumber));
+            File dir = new File(rootPath + File.separator + "dfsDataNode" + String.valueOf(socketNumber));
 
-            path = rootPath + File.separator + "dfsNodeFiles" + String.valueOf(socketNumber);
+            path = rootPath + File.separator + "dfsDataNode" + String.valueOf(socketNumber);
 
             if (!dir.exists())
                 dir.mkdirs();
-
-
-
+            
                 byte[] bytes = new byte[100*1024*1024];
                 byte[] finalBytes = new byte[100*1024*1024];
                 int count;
@@ -91,6 +89,11 @@ public class Main {
                             Path pathTofileToSend = Paths.get(path + File.separator + name);
                             byte[] bytesToSend = Files.readAllBytes(pathTofileToSend);
                             bufferedOutputStream.write(bytesToSend);
+                            bufferedOutputStream.write(4);
+                            bufferedOutputStream.flush();
+                        } else if(command.equals("freespace")) {
+                            String freeSpace = String.valueOf(dir.getUsableSpace());
+                            bufferedOutputStream.write(freeSpace.getBytes());
                             bufferedOutputStream.write(4);
                             bufferedOutputStream.flush();
                         }
