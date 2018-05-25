@@ -63,35 +63,59 @@ public class Main {
                             String name = input.substring(0, i);
                             input = input.substring(i + 2, input.length());
                             finalIndex += i + 2;
-                            FileOutputStream fileOutputStream = new FileOutputStream(new File(path + File.separator + name));
-                            fileOutputStream.write(bytes, finalIndex, count-1);
-                            fileOutputStream.close();
-                            String response = "success";
-                            bufferedOutputStream.write(response.getBytes());
-                            bufferedOutputStream.flush();
-                            writeLog("Executed command: 'save' on file '" + name + "'",0);
+                            writeLog("Received command: 'save' on file '" + name + "'", 0);
+                            if(new File(path).getUsableSpace()>count-1-finalCount) {
+                                FileOutputStream fileOutputStream = new FileOutputStream(new File(path + File.separator + name));
+                                fileOutputStream.write(bytes, finalIndex, count - 1);
+                                fileOutputStream.close();
+                                String response = "success";
+                                bufferedOutputStream.write(response.getBytes());
+                                bufferedOutputStream.write(4);
+                                bufferedOutputStream.flush();
+                                writeLog("Command executed properly", 0);
+                            }
+                            else {
+                                String response = "lackOfSpace";
+                                bufferedOutputStream.write(response.getBytes());
+                                bufferedOutputStream.write(4);
+                                bufferedOutputStream.flush();
+                                writeLog("Command couldn't executed properly because of the lack of space", 2);
+                            }
 
                         } else if(command.equals("delete")) {
                             i = 0;
                             while (input.charAt(i) != '"') i++;
                             String name = input.substring(0, i);
+                            writeLog("Received command: 'delete' on file '" + name + "'", 0);
                             File toDelete = new File(path + File.separator + name);
                             toDelete.delete();
                             String response = "success";
                             bufferedOutputStream.write(response.getBytes());
+                            bufferedOutputStream.write(4);
                             bufferedOutputStream.flush();
-                            writeLog("Executed command: 'delete' on file '" + name + "'",0);
+                            writeLog("Command executed properly", 0);
 
                         } else if(command.equals("download")) {
                             i = 0;
                             while (input.charAt(i) != '"') i++;
                             String name = input.substring(0, i);
-                            Path pathTofileToSend = Paths.get(path + File.separator + name);
-                            byte[] bytesToSend = Files.readAllBytes(pathTofileToSend);
-                            bufferedOutputStream.write(bytesToSend);
-                            bufferedOutputStream.write(4);
-                            bufferedOutputStream.flush();
-                            writeLog("Executed command: 'download' on file '" + name + "'",0);
+                            writeLog("Received command: 'download' on file '" + name + "'", 0);
+                            if(new File(path+File.separator+name).exists()) {
+                                Path pathTofileToSend = Paths.get(path + File.separator + name);
+                                byte[] bytesToSend = Files.readAllBytes(pathTofileToSend);
+                                bufferedOutputStream.write(bytesToSend);
+                                bufferedOutputStream.write(4);
+                                bufferedOutputStream.flush();
+                                writeLog("Command executed properly", 0);
+                            }
+                            else {
+                                String response = "fileDoesntExist";
+                                bufferedOutputStream.write(response.getBytes());
+                                bufferedOutputStream.write(4);
+                                bufferedOutputStream.flush();
+
+                                writeLog("Command couldn't executed properly because the requested file doesn't exist", 2);
+                            }
 
                         } else if(command.equals("freespace")) {
                             String freeSpace = String.valueOf(dir.getUsableSpace());
@@ -115,23 +139,16 @@ public class Main {
         }
     }
 
-    /*
-        type:
-           0 - information
-           1 - warning
-           2 - error
-     */
-
-    public static void writeLog(String message,int type) {
+    private static void writeLog(String message,int type) {
         String toReturn = "";
         if(type==0)
-            toReturn+="[information] ";
+            toReturn+="[information]\t";
         else if(type==1)
-            toReturn+="[warning] ";
+            toReturn+="[warning]\t";
         else if(type==2)
-            toReturn+="[error] ";
+            toReturn+="[error]\t";
         toReturn += new SimpleDateFormat("[yyyy/MM/dd HH:mm:ss]").format(Calendar.getInstance().getTime());
-        toReturn+=" " + message;
+        toReturn+="\t" + message;
         System.out.println(toReturn);
     }
     private static String path;
