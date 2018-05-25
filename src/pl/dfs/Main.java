@@ -1,15 +1,13 @@
 package pl.dfs;
 
-import sun.misc.IOUtils;
-import sun.nio.ch.IOUtil;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class Main {
 
@@ -18,12 +16,10 @@ public class Main {
             int socketNumber = 4444;
             if(args.length>=1)
                 socketNumber = Integer.parseInt(args[0]);
-
-            ServerSocket serverSocket = null;
-            serverSocket = new ServerSocket(socketNumber);
-            Socket socket = null;
-            socket = serverSocket.accept();
-
+            ServerSocket serverSocket = new ServerSocket(socketNumber);
+            writeLog("DataNode initialized and listening on port " + socketNumber,0);
+            Socket socket = serverSocket.accept();
+            writeLog("NameNode connected",0);
             socket.setTcpNoDelay(true);
 
             BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream());
@@ -73,6 +69,7 @@ public class Main {
                             String response = "success";
                             bufferedOutputStream.write(response.getBytes());
                             bufferedOutputStream.flush();
+                            writeLog("Executed command: 'save' on file '" + name + "'",0);
 
                         } else if(command.equals("delete")) {
                             i = 0;
@@ -83,6 +80,7 @@ public class Main {
                             String response = "success";
                             bufferedOutputStream.write(response.getBytes());
                             bufferedOutputStream.flush();
+                            writeLog("Executed command: 'delete' on file '" + name + "'",0);
 
                         } else if(command.equals("download")) {
                             i = 0;
@@ -93,25 +91,48 @@ public class Main {
                             bufferedOutputStream.write(bytesToSend);
                             bufferedOutputStream.write(4);
                             bufferedOutputStream.flush();
+                            writeLog("Executed command: 'download' on file '" + name + "'",0);
+
                         } else if(command.equals("freespace")) {
                             String freeSpace = String.valueOf(dir.getUsableSpace());
                             bufferedOutputStream.write(freeSpace.getBytes());
                             bufferedOutputStream.write(4);
                             bufferedOutputStream.flush();
+                            writeLog("Executed command: 'freespace'",0);
+
                         }
                     } catch (Exception e) {
                         String response = "failure";
                         bufferedOutputStream.write(response.getBytes());
+                        bufferedOutputStream.flush();
+                        writeLog("Error, NameNode tried to execute unknown command!",2);
                     }
                 }
-
-
         }
         catch (IOException e1) {
-            System.out.println("wyjatek");
+            System.out.println("Cannot create a DataNode. Check your network settings and priviliges to write to" +
+                    "your home folder.");
         }
-
     }
 
+    /*
+        type:
+           0 - information
+           1 - warning
+           2 - error
+     */
+
+    public static void writeLog(String message,int type) {
+        String toReturn = "";
+        if(type==0)
+            toReturn+="[information] ";
+        else if(type==1)
+            toReturn+="[warning] ";
+        else if(type==2)
+            toReturn+="[error] ";
+        toReturn += new SimpleDateFormat("[yyyy/MM/dd HH:mm:ss]").format(Calendar.getInstance().getTime());
+        toReturn+=" " + message;
+        System.out.println(toReturn);
+    }
     private static String path;
 }
